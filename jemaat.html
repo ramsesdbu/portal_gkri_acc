@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Jemaat - Apostolic Community Church</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <h1>Data Jemaat</h1>
+    <div>
+      <span id="userEmail"></span>
+      <button onclick="logout()">Logout</button>
+      <button id="backBtn" onclick="window.location.href='index.html'">Kembali</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <h2>Daftar Jemaat</h2>
+  <button id="addDataBtn" style="display:none;">Tambah Data</button>
+  <table border="1" width="100%" id="dataTable">
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Alamat</th>
+        <th>Telepon</th>
+        <th>Pekerjaan</th>
+        <th>Bidang Pekerjaan / Usaha</th>
+        <th>Nama Perusahaan</th>
+        <th>Link Usaha / Perusahaan</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="dataBody"></tbody>
+  </table>
+</main>
+
+<script type="module">
+  // === Import Firebase ===
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+  // === Konfigurasi Firebase ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD_9IK2Q6GadJZ0b4bxAU4y_Dy40YHFgg",
+    authDomain: "portal-gkri-acc.firebaseapp.com",
+    projectId: "portal-gkri-acc",
+    storageBucket: "portal-gkri-acc.firebasestorage.app",
+    messagingSenderId: "576799178067",
+    appId: "1:576799178067:web:e15b3533990275c5cb35a6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // === Cek apakah user login ===
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("Anda harus login terlebih dahulu!");
+      window.location.href = "login.html";
+      return;
+    }
+
+    document.getElementById("userEmail").textContent = `Login: ${user.email}`;
+
+    const isAdmin = (user.email === "ramses.elits@gmail.com" || user.email === "admin@acc.com");
+
+    // Tampilkan tombol tambah data hanya jika admin
+    if (isAdmin) document.getElementById("addDataBtn").style.display = "inline-block";
+
+    // === Ambil data dari Firestore ===
+    await loadData(isAdmin);
+  });
+
+  // === Logout ===
+  window.logout = function () {
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+  };
+
+  // === Fungsi ambil data ===
+  async function loadData(isAdmin) {
+    const querySnapshot = await getDocs(collection(db, "jemaat"));
+    const dataBody = document.getElementById("dataBody");
+    dataBody.innerHTML = "";
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${data.nama}</td>
+        <td>${data.alamat}</td>
+        <td>${data.telepon}</td>
+        <td>${data.pekerjaan}</td>
+        <td>${data.bidang}</td>
+        <td>${data.namaUsaha}</td>
+        <td><a href="${data.linkUsaha}" target="_blank">${data.linkUsaha}</a></td>
+        <td>
+          ${isAdmin ? `
+            <button onclick="editData('${docSnap.id}', '${data.nama}', '${data.alamat}', '${data.telepon}', '${data.pekerjaan}', '${data.bidang}', '${data.namaUsaha}', '${data.linkUsaha}')">Edit</button>
+            <button onclick="deleteData('${docSnap.id}')">Hapus</button>
+          ` : '-'}
+        </td>
+      `;
+
+      dataBody.appendChild(row);
+    });
+  }
+
+  // === Tambah Data ===
+  document.getElementById("addDataBtn").addEventListener("click", async () => {
+    const nama = prompt("Masukkan Nama:");
+    const alamat = prompt("Masukkan Alamat:");
+    const telepon = prompt("Masukkan Telepon:");
+    const pekerjaan = prompt("Masukkan Pekerjaan:");
+    const bidang = prompt("Masukkan Bidang Pekerjaan / Usaha:");
+    const namaUsaha = prompt("Masukkan Nama Perusahaan:");
+    const linkUsaha = prompt("Masukkan Link Usaha / Perusahaan:");
+
+    if (!nama) return alert("Nama wajib diisi!");
+
+    await addDoc(collection(db, "jemaat"), {
+      nama, alamat, telepon, pekerjaan, bidang, namaUsaha, linkUsaha
+    });
+
+    alert("Data berhasil ditambahkan!");
+    location.reload();
+  });
+
+  // === Edit Data ===
+  window.editData = async (id, nama, alamat, telepon, pekerjaan, bidang, namaUsaha, linkUsaha) => {
+    const newNama = prompt("Nama:", nama);
+    const newAlamat = prompt("Alamat:", alamat);
+    const newTelepon = prompt("Telepon:", telepon);
+    const newPekerjaan = prompt("Pekerjaan:", pekerjaan);
+    const newBidang = prompt("Bidang Pekerjaan / Usaha:", bidang);
+    const newNamaUsaha = prompt("Nama Perusahaan:", namaUsaha);
+    const newLinkUsaha = prompt("Link Usaha / Perusahaan:", linkUsaha);
+
+    const docRef = doc(db, "jemaat", id);
+    await updateDoc(docRef, {
+      nama: newNama,
+      alamat: newAlamat,
+      telepon: newTelepon,
+      pekerjaan: newPekerjaan,
+      bidang: newBidang,
+      namaUsaha: newNamaUsaha,
+      linkUsaha: newLinkUsaha
+    });
+
+    alert("Data berhasil diperbarui!");
+    location.reload();
+  };
+
+  // === Hapus Data ===
+  window.deleteData = async (id) => {
+    if (confirm("Yakin ingin menghapus data ini?")) {
+      await deleteDoc(doc(db, "jemaat", id));
+      alert("Data berhasil dihapus!");
+      location.reload();
+    }
+  };
+</script>
+</body>
+</html>
+

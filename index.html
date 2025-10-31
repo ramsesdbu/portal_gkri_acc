@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Apostolic Community Church â€” Surabaya</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+  .btn-login {
+    background-color: #3b2e1e; /* coklat tua pekat */
+    color: #ffffff !important; /* teks putih kontras */
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    transition: background-color 0.3s;
+  }
+
+  .btn-login:hover {
+    background-color: #5a422a; /* warna hover sedikit lebih muda */
+  }
+
+  .nav a {
+    color: #2d1b0b;
+    margin-left: 12px;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .nav a:hover {
+    color: #5a422a;
+  }
+
+  header.site-header {
+    background-color: #fffaf3;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <img src="logo.png" class="logo" alt="Logo">
+      <div class="brand-text">
+        <h1>Apostolic Community Church</h1>
+        <p class="sub">Apostolic Community Church â€” Surabaya</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="#" id="dataJemaatLink">Data Jemaat</a>
+      <a href="login.html" class="btn-login" id="loginBtn">Member Login</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="renungan">
+    <h2>Renungan Harian</h2>
+
+    <article class="devotional">
+      <h3>Mazmur 23:1</h3>
+      <p><em>"Tuhan adalah gembalaku, takkan kekurangan aku."</em></p>
+      <p>Refleksi: Dalam setiap musim, Tuhan menuntun dan menyediakan. Percayalah pada pemeliharaan-Nya.</p>
+    </article>
+
+    <article class="devotional">
+      <h3>Yohanes 14:6</h3>
+      <p><em>"Akulah jalan dan kebenaran dan hidup."</em></p>
+      <p>Refleksi: Kristus memberi arah dan pengharapan bagi hidup kita setiap hari.</p>
+    </article>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>&copy; Apostolic Community Church â€” Surabaya</p>
+  </div>
+</footer>
+
+<!-- í´¥ Firebase Auth Integration -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD_9IK2Q6GadJZ0b4bxAU4y_Dy40YHFgg",
+    authDomain: "portal-gkri-acc.firebaseapp.com",
+    projectId: "portal-gkri-acc",
+    storageBucket: "portal-gkri-acc.firebasestorage.app",
+    messagingSenderId: "576799178067",
+    appId: "1:576799178067:web:e15b3533990275c5cb35a6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const dataJemaatLink = document.getElementById("dataJemaatLink");
+  const loginBtn = document.getElementById("loginBtn");
+
+  // Deteksi status login
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Jika sudah login, arahkan langsung ke jemaat.html
+      dataJemaatLink.href = "jemaat.html";
+      loginBtn.textContent = "Logout";
+      loginBtn.href = "#";
+      loginBtn.addEventListener("click", async () => {
+        await auth.signOut();
+        alert("Anda telah logout.");
+        window.location.reload();
+      });
+    } else {
+      // Jika belum login
+      dataJemaatLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("Silakan login terlebih dahulu untuk mengakses Data Jemaat.");
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Panel — Apostolic Community Church</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; }
+    .container { max-width: 950px; margin: 40px auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #3f72af; color: white; }
+    input { width: 100%; padding: 6px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-top: 10px; padding: 8px 14px; border: none; background: #3f72af; color: white; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #2b5d91; }
+    .actions { text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Panel Admin — Data Jemaat</h2>
+
+    <form id="addForm">
+      <h3>Tambah / Edit Data Jemaat</h3>
+      <input type="hidden" id="docId">
+      <input type="text" id="nama" placeholder="Nama">
+      <input type="text" id="alamat" placeholder="Alamat">
+      <input type="text" id="pekerjaan" placeholder="Pekerjaan">
+      <input type="text" id="nama_perusahaan" placeholder="Nama Perusahaan">
+      <input type="text" id="link_usaha" placeholder="Link Usaha / Perusahaan">
+      <button type="submit">Simpan</button>
+    </form>
+
+    <h3>Daftar Jemaat</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Alamat</th>
+          <th>Pekerjaan</th>
+          <th>Nama Perusahaan</th>
+          <th>Link Usaha</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="jemaatData">
+        <tr><td colspan="6">Memuat data...</td></tr>
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <button id="logoutBtn">Logout</button>
+      <a href="index.html">← Kembali ke Beranda</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCD_9IK2Q6GadJZ0b4bxAU4y_Dy40YHFgg",
+      authDomain: "portal-gkri-acc.firebaseapp.com",
+      projectId: "portal-gkri-acc",
+      storageBucket: "portal-gkri-acc.firebasestorage.app",
+      messagingSenderId: "576799178067",
+      appId: "1:576799178067:web:e15b3533990275c5cb35a6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const tableBody = document.getElementById("jemaatData");
+    const form = document.getElementById("addForm");
+
+    // Cek login dan hak admin
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("Anda belum login!");
+        window.location.href = "login.html";
+      } else if (user.email !== "admin@acc.com") {
+        alert("Akses ditolak! Hanya admin yang dapat membuka halaman ini.");
+        window.location.href = "jemaat.html";
+      } else {
+        loadData();
+      }
+    });
+
+    // Muat data jemaat
+    async function loadData() {
+      tableBody.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "jemaat"));
+      snapshot.forEach((docItem) => {
+        const j = docItem.data();
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${j.nama || ""}</td>
+          <td>${j.alamat || ""}</td>
+          <td>${j.pekerjaan || ""}</td>
+          <td>${j.nama_perusahaan || ""}</td>
+          <td>${j.link_usaha || ""}</td>
+          <td>
+            <button onclick="editData('${docItem.id}','${j.nama}','${j.alamat}','${j.pekerjaan}','${j.nama_perusahaan}','${j.link_usaha}')">Edit</button>
+            <button onclick="hapusData('${docItem.id}')">Hapus</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Simpan atau update data
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("docId").value;
+      const data = {
+        nama: document.getElementById("nama").value,
+        alamat: document.getElementById("alamat").value,
+        pekerjaan: document.getElementById("pekerjaan").value,
+        nama_perusahaan: document.getElementById("nama_perusahaan").value,
+        link_usaha: document.getElementById("link_usaha").value
+      };
+
+      if (id) {
+        await updateDoc(doc(db, "jemaat", id), data);
+        alert("Data diperbarui!");
+      } else {
+        await addDoc(collection(db, "jemaat"), data);
+        alert("Data baru ditambahkan!");
+      }
+
+      form.reset();
+      document.getElementById("docId").value = "";
+      loadData();
+    });
+
+    // Fungsi edit dan hapus
+    window.editData = (id, nama, alamat, pekerjaan, nama_perusahaan, link_usaha) => {
+      document.getElementById("docId").value = id;
+      document.getElementById("nama").value = nama;
+      document.getElementById("alamat").value = alamat;
+      document.getElementById("pekerjaan").value = pekerjaan;
+      document.getElementById("nama_perusahaan").value = nama_perusahaan;
+      document.getElementById("link_usaha").value = link_usaha;
+    };
+
+    window.hapusData = async (id) => {
+      if (confirm("Hapus data ini?")) {
+        await deleteDoc(doc(db, "jemaat", id));
+        loadData();
+      }
+    };
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      });
+    });
+  </script>
+</body>
+</html>
+

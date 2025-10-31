@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login Jemaat — Apostolic Community Church</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; }
+    .login-container { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; }
+    button { width: 100%; padding: 10px; background: #3f72af; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #2b5d91; }
+    h2 { text-align: center; color: #333; }
+    a { text-decoration: none; color: #3f72af; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login Jemaat</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Masuk</button>
+    </form>
+    <p style="text-align:center;margin-top:15px;"><a href="index.html">← Kembali ke Beranda</a></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCD_9IK2Q6GadJZ0b4bxAU4y_Dy40YHFgg",
+      authDomain: "portal-gkri-acc.firebaseapp.com",
+      projectId: "portal-gkri-acc",
+      storageBucket: "portal-gkri-acc.firebasestorage.app",
+      messagingSenderId: "576799178067",
+      appId: "1:576799178067:web:e15b3533990275c5cb35a6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      signInWithEmailAndPassword(auth, email, password)
+  .then((userCredential) => {
+    const user = userCredential.user;
+
+    // cek apakah email adalah admin
+    if (user.email === "ramses.elits@gmail.com") {
+      window.location.href = "admin.html";
+    } else {
+      window.location.href = "jemaat.html";
+    }
+  })
+  .catch((error) => {
+    alert("Login gagal: " + error.message);
+  });
+    });
+  </script>
+</body>
+</html>
+
